@@ -155,11 +155,11 @@ def render_basic_stats(analyzer):
     
     col_dist, col_top = st.columns([1, 1])
     with col_dist:
-        st.plotly_chart(figs['hist'], width='stretch', config={'displayModeBar': False})
-        st.plotly_chart(figs['cv'], width='stretch', config={'displayModeBar': False})
+        st.plotly_chart(figs['hist'], config={'displayModeBar': False}, use_container_width=True)
+        st.plotly_chart(figs['cv'], config={'displayModeBar': False}, use_container_width=True)
     with col_top:
-        st.plotly_chart(figs['top'], width='stretch', config={'displayModeBar': False})
-        st.plotly_chart(figs['avg'], width='stretch', config={'displayModeBar': False})
+        st.plotly_chart(figs['top'], config={'displayModeBar': False}, use_container_width=True)
+        st.plotly_chart(figs['avg'], config={'displayModeBar': False}, use_container_width=True)
     
     st.markdown("#### Data Summary (Top 20 by Total Consumption)")
     st.dataframe(data_summary.nlargest(20, 'total_consumption').style.format({
@@ -183,12 +183,12 @@ def render_trend_analysis(analyzer):
     if figs is not None:
         col_hist, col_top = st.columns([1, 1])
         with col_hist:
-            st.plotly_chart(figs['growth_hist'], width='stretch', config={'displayModeBar': False})
-            st.plotly_chart(figs['slope'], width='stretch', config={'displayModeBar': False})
+            st.plotly_chart(figs['growth_hist'], config={'displayModeBar': False}, use_container_width=True)
+            st.plotly_chart(figs['slope'], config={'displayModeBar': False}, use_container_width=True)
         with col_top:
-            st.plotly_chart(figs['top_growth'], width='stretch', config={'displayModeBar': False})
+            st.plotly_chart(figs['top_growth'], config={'displayModeBar': False}, use_container_width=True)
         
-        st.plotly_chart(figs['scatter'], width='stretch', config={'displayModeBar': False})
+        st.plotly_chart(figs['scatter'], config={'displayModeBar': False}, use_container_width=True)
         
         col_grow, col_decline = st.columns(2)
         
@@ -215,13 +215,13 @@ def render_seasonality_analysis(analyzer):
     
     figs, monthly_stats = plot_seasonality_analysis(analyzer)
     
-    st.plotly_chart(figs['ts'], width='stretch', config={'displayModeBar': False})
+    st.plotly_chart(figs['ts'], config={'displayModeBar': False}, use_container_width=True)
 
     col_avg, col_yoy = st.columns([1, 1])
     with col_avg:
-        st.plotly_chart(figs['avg_month'], width='stretch', config={'displayModeBar': False})
+        st.plotly_chart(figs['avg_month'], config={'displayModeBar': False}, use_container_width=True)
     with col_yoy:
-        st.plotly_chart(figs['yoy'], width='stretch', config={'displayModeBar': False})
+        st.plotly_chart(figs['yoy'], config={'displayModeBar': False}, use_container_width=True)
     
     st.markdown("#### Monthly Average Consumption Summary")
     st.dataframe(monthly_stats.style.format({
@@ -287,9 +287,9 @@ def render_clustering_analysis(analyzer):
     if figs is not None:
         col_pca, col_pattern = st.columns([1, 1])
         with col_pca:
-            st.plotly_chart(figs['pca'], width='stretch', config={'displayModeBar': False})
+            st.plotly_chart(figs['pca'], config={'displayModeBar': False}, use_container_width=True)
         with col_pattern:
-            st.plotly_chart(figs['pattern'], width='stretch', config={'displayModeBar': False})
+            st.plotly_chart(figs['pattern'], config={'displayModeBar': False}, use_container_width=True)
         
         st.markdown(f"#### Cluster Summary (K={n_clusters})")
         st.dataframe(cluster_summary.style.format({
@@ -315,7 +315,7 @@ def render_forecasting(analyzer):
         if fig_forecast is None:
             st.error(forecast_data)
         else:
-            st.plotly_chart(fig_forecast, width='stretch', config={'displayModeBar': False})
+            st.plotly_chart(fig_forecast, config={'displayModeBar': False}, use_container_width=True)
             
             st.markdown("#### 6-Month Forecast Values")
             st.dataframe(forecast_data.style.format({'Forecast Consumption': '{:,.0f}'}), width='stretch')
@@ -363,7 +363,7 @@ def render_comparison(analyzer):
     
     if len(selected_feeders) >= 2:
         fig_comparison = compare_feeders(analyzer, selected_feeders)
-        st.plotly_chart(fig_comparison, width='stretch', config={'displayModeBar': False})
+        st.plotly_chart(fig_comparison, config={'displayModeBar': False}, use_container_width=True)
         
         st.markdown("#### Comparison Statistics")
         comparison_stats = analyzer.stats_df[analyzer.stats_df['feeder_name'].isin(selected_feeders)][
