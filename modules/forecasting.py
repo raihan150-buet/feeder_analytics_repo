@@ -1,11 +1,8 @@
-# modules/forecasting.py
 import numpy as np
 import pandas as pd
 from scipy import stats
 from scipy.optimize import minimize
 import streamlit as st
-import plotly.express as px
-from io import BytesIO
 
 def _perform_forecasting_methods(self, feeder_row, method, forecast_months):
     """Performs the selected seasonality-aware forecasting method for a single feeder."""
@@ -138,12 +135,13 @@ def forecast_feeder(self, feeder_name, method, forecast_months):
     
     history_df = pd.DataFrame({'Month': historical_labels, 'Consumption': clean_values, 'Type': 'Historical'})
     forecast_df = pd.DataFrame({'Month': forecast_months_labels, 'Consumption': forecast, 'Type': 'Forecast'})
-    combined_df = pd.concat([history_df, forecast_df]).reset_index(drop=True)
+    combined_df = pd.concat([history_df, forecast_df])
     
     fig = px.line(combined_df, x='Month', y='Consumption', color='Type',
                   line_dash='Type', markers=True,
                   title=f'Consumption Forecast for {feeder_name} ({method})',
                   labels={'Consumption': 'Consumption (units)', 'Month': 'Month'},
+                  color_discrete_map={'Historical': '#1f77b4', 'Forecast': '#d62728'},
                   template="plotly_white")
                   
     fig.update_layout(yaxis_tickformat='~s', xaxis_tickangle=-45)
@@ -155,14 +153,13 @@ def bulk_forecasting(self, method, forecast_months):
     
     forecast_data = []
     
-    # Use st.progress for visual feedback (robust across streamlit versions)
-    progress_bar = st.progress(0)
+    # Use st.progress for visual feedback
+    progress_bar = st.progress(0, text="Forecasting in progress...")
     
     # Determine forecast month labels only once for consistent column naming
     last_historical_month = pd.to_datetime(self.date_columns[-1])
     forecast_month_labels = [(last_historical_month + pd.DateOffset(months=i+1)).strftime('%Y-%m') for i in range(forecast_months)]
 
-    total_feeders = len(self.df)
     for i, (idx, feeder_row) in enumerate(self.df.iterrows()):
         feeder_name = feeder_row['feeder_name']
         
@@ -176,17 +173,12 @@ def bulk_forecasting(self, method, forecast_months):
                 'nocs': feeder_row['nocs'],
                 'total_consumption_forecast': np.sum(forecast)
             }
-            # Correctly iterate over forecast and forecast_month_labels using zip
+            # FIX: Correctly iterate over forecast and forecast_month_labels using zip
             forecast_dict = {f'Forecast_{i+1}_{date}': val for i, (date, val) in enumerate(zip(forecast_month_labels, forecast))}
             row_data.update(forecast_dict)
             forecast_data.append(row_data)
         
-        # update progress as percent (0-100)
-        try:
-            progress_percent = int(((i + 1) / total_feeders) * 100)
-        except Exception:
-            progress_percent = 0
-        progress_bar.progress(min(max(progress_percent, 0), 100))
+        progress_bar.progress((i + 1) / len(self.df), text=f"Feeder: {feeder_name} | {i+1}/{len(self.df)} completed.")
 
     progress_bar.empty()
     
