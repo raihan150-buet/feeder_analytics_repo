@@ -3,6 +3,7 @@ import pandas as pd
 from scipy import stats
 from scipy.optimize import minimize
 import streamlit as st
+import plotly.express as px
 
 def _perform_forecasting_methods(self, feeder_row, method, forecast_months):
     """Performs the selected seasonality-aware forecasting method for a single feeder."""
