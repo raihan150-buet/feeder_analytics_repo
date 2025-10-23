@@ -1,3 +1,4 @@
+# modules/ui_components.py
 import streamlit as st
 import pandas as pd
 from datetime import datetime
@@ -126,7 +127,7 @@ def setup_sidebar(analyzer, df, date_cols):
             data=excel_data,
             file_name=f'DPDC_Report_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx',
             mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            width='stretch'
+            key='download-excel'
         )
     
     with col_html:
@@ -136,7 +137,7 @@ def setup_sidebar(analyzer, df, date_cols):
             data=html_report,
             file_name=f'DPDC_Report_{datetime.now().strftime("%Y%m%d_%H%M%S")}.html',
             mime='text/html',
-            width='stretch'
+            key='download-html'
         )
     
     st.sidebar.info("💡 **Tip:** Download the HTML report and open it in a browser, then use 'Print to PDF' for a PDF version.")
@@ -153,13 +154,23 @@ def render_basic_stats(analyzer):
     
     figs, data_summary = plot_basic_statistics(analyzer)
     
-    col_dist, col_top = st.columns([1, 1])
-    with col_dist:
-        st.plotly_chart(figs['hist'], config={'displayModeBar': False}, use_container_width=True)
-        st.plotly_chart(figs['cv'], config={'displayModeBar': False}, use_container_width=True)
-    with col_top:
-        st.plotly_chart(figs['top'], config={'displayModeBar': False}, use_container_width=True)
-        st.plotly_chart(figs['avg'], config={'displayModeBar': False}, use_container_width=True)
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        st.plotly_chart(figs['hist'], use_container_width=True, config={'displayModeBar': False})
+        st.plotly_chart(figs['cv'], use_container_width=True, config={'displayModeBar': False})
+    with col2:
+        st.plotly_chart(figs['top'], use_container_width=True, config={'displayModeBar': False})
+        st.plotly_chart(figs['avg'], use_container_width=True, config={'displayModeBar': False})
+    
+    # Additional interactive hierarchical visuals
+    if figs.get('treemap') is not None:
+        st.markdown("---")
+        st.markdown("#### Consumption Treemap (explore by drilling into levels)")
+        st.plotly_chart(figs['treemap'], use_container_width=True, config={'displayModeBar': False})
+    if figs.get('sunburst') is not None:
+        st.markdown("---")
+        st.markdown("#### Sunburst (Substation → Feeder)")
+        st.plotly_chart(figs['sunburst'], use_container_width=True, config={'displayModeBar': False})
     
     st.markdown("#### Data Summary (Top 20 by Total Consumption)")
     st.dataframe(data_summary.nlargest(20, 'total_consumption').style.format({
@@ -183,12 +194,18 @@ def render_trend_analysis(analyzer):
     if figs is not None:
         col_hist, col_top = st.columns([1, 1])
         with col_hist:
-            st.plotly_chart(figs['growth_hist'], config={'displayModeBar': False}, use_container_width=True)
-            st.plotly_chart(figs['slope'], config={'displayModeBar': False}, use_container_width=True)
+            st.plotly_chart(figs['growth_hist'], use_container_width=True, config={'displayModeBar': False})
+            st.plotly_chart(figs['slope'], use_container_width=True, config={'displayModeBar': False})
         with col_top:
-            st.plotly_chart(figs['top_growth'], config={'displayModeBar': False}, use_container_width=True)
+            st.plotly_chart(figs['top_growth'], use_container_width=True, config={'displayModeBar': False})
         
-        st.plotly_chart(figs['scatter'], config={'displayModeBar': False}, use_container_width=True)
+        st.plotly_chart(figs['scatter'], use_container_width=True, config={'displayModeBar': False})
+        
+        # Additional heat/summary chart
+        if figs.get('heat') is not None:
+            st.markdown("---")
+            st.markdown("#### Growth Rate Bins — Average Absolute Change")
+            st.plotly_chart(figs['heat'], use_container_width=True, config={'displayModeBar': False})
         
         col_grow, col_decline = st.columns(2)
         
@@ -215,13 +232,19 @@ def render_seasonality_analysis(analyzer):
     
     figs, monthly_stats = plot_seasonality_analysis(analyzer)
     
-    st.plotly_chart(figs['ts'], config={'displayModeBar': False}, use_container_width=True)
+    st.plotly_chart(figs['ts'], use_container_width=True, config={'displayModeBar': False})
 
     col_avg, col_yoy = st.columns([1, 1])
     with col_avg:
-        st.plotly_chart(figs['avg_month'], config={'displayModeBar': False}, use_container_width=True)
+        st.plotly_chart(figs['avg_month'], use_container_width=True, config={'displayModeBar': False})
     with col_yoy:
-        st.plotly_chart(figs['yoy'], config={'displayModeBar': False}, use_container_width=True)
+        st.plotly_chart(figs['yoy'], use_container_width=True, config={'displayModeBar': False})
+    
+    # Month treemap (if present)
+    if figs.get('month_treemap') is not None:
+        st.markdown("---")
+        st.markdown("#### Monthly Contribution Treemap (drill down by year → month)")
+        st.plotly_chart(figs['month_treemap'], use_container_width=True, config={'displayModeBar': False})
     
     st.markdown("#### Monthly Average Consumption Summary")
     st.dataframe(monthly_stats.style.format({
@@ -287,9 +310,13 @@ def render_clustering_analysis(analyzer):
     if figs is not None:
         col_pca, col_pattern = st.columns([1, 1])
         with col_pca:
-            st.plotly_chart(figs['pca'], config={'displayModeBar': False}, use_container_width=True)
+            st.plotly_chart(figs['pca'], use_container_width=True, config={'displayModeBar': False})
+            # Show cluster composition sunburst under PCA for quick drilldown
+            if figs.get('sunburst_cluster') is not None:
+                st.markdown("#### Cluster Composition (drill into cluster → substation → feeder)")
+                st.plotly_chart(figs['sunburst_cluster'], use_container_width=True, config={'displayModeBar': False})
         with col_pattern:
-            st.plotly_chart(figs['pattern'], config={'displayModeBar': False}, use_container_width=True)
+            st.plotly_chart(figs['pattern'], use_container_width=True, config={'displayModeBar': False})
         
         st.markdown(f"#### Cluster Summary (K={n_clusters})")
         st.dataframe(cluster_summary.style.format({
@@ -315,7 +342,7 @@ def render_forecasting(analyzer):
         if fig_forecast is None:
             st.error(forecast_data)
         else:
-            st.plotly_chart(fig_forecast, config={'displayModeBar': False}, use_container_width=True)
+            st.plotly_chart(fig_forecast, use_container_width=True, config={'displayModeBar': False})
             
             st.markdown("#### 6-Month Forecast Values")
             st.dataframe(forecast_data.style.format({'Forecast Consumption': '{:,.0f}'}), width='stretch')
@@ -346,7 +373,7 @@ def render_bulk_forecasting(analyzer):
                 data=bulk_report_data,
                 file_name=f'Bulk_Forecast_{bulk_method.replace(" ", "_")}_{bulk_months}M_{datetime.now().strftime("%Y%m%d")}.xlsx',
                 mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                width='stretch'
+                key='download-bulk-forecast'
             )
 
 def render_comparison(analyzer):
@@ -363,7 +390,7 @@ def render_comparison(analyzer):
     
     if len(selected_feeders) >= 2:
         fig_comparison = compare_feeders(analyzer, selected_feeders)
-        st.plotly_chart(fig_comparison, config={'displayModeBar': False}, use_container_width=True)
+        st.plotly_chart(fig_comparison, use_container_width=True, config={'displayModeBar': False})
         
         st.markdown("#### Comparison Statistics")
         comparison_stats = analyzer.stats_df[analyzer.stats_df['feeder_name'].isin(selected_feeders)][
