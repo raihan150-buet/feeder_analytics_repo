@@ -202,10 +202,13 @@ def render_trend_analysis(analyzer):
         st.plotly_chart(figs['scatter'], use_container_width=True, config={'displayModeBar': False})
         
         # Additional heat/summary chart
-        if figs.get('heat') is not None:
+        # Optional heatmap of growth bins (safe render)
+        heat_fig = figs.get('heat')
+        if heat_fig is not None and hasattr(heat_fig, "to_plotly_json"):
             st.markdown("---")
             st.markdown("#### Growth Rate Bins — Average Absolute Change")
-            st.plotly_chart(figs['heat'], use_container_width=True, config={'displayModeBar': False})
+            st.plotly_chart(heat_fig, use_container_width=True, config={'displayModeBar': False})
+
         
         col_grow, col_decline = st.columns(2)
         
