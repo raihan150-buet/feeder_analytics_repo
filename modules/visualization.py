@@ -1,5 +1,3 @@
-# modules/visualization.py
-
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
@@ -161,14 +159,17 @@ def plot_trend_analysis(self):
     # New: heat summary — average absolute change by growth bin
     heat_df = trend_df.copy()
     heat_df['growth_bin'] = pd.cut(heat_df['growth_rate_%'].clip(-500, 500), bins=10)
-    pivot = heat_df.pivot_table(index='growth_bin', values='absolute_change', aggfunc='mean').reset_index().dropna()
+    # Use observed=False to avoid future pandas warning and convert bins to strings for Plotly
+    pivot = heat_df.pivot_table(index='growth_bin', values='absolute_change', aggfunc='mean', observed=False).reset_index().dropna()
+    pivot['growth_bin'] = pivot['growth_bin'].astype(str)
 
-    fig_heat = px.bar(
-        pivot, x='growth_bin', y='absolute_change',
-        title='Average Absolute Change by Growth Rate Bin',
-        labels={'absolute_change': 'Mean Δ Consumption'}
-    ) if not pivot.empty else None
-    if fig_heat:
+    fig_heat = None
+    if not pivot.empty:
+        fig_heat = px.bar(
+            pivot, x='growth_bin', y='absolute_change',
+            title='Average Absolute Change by Growth Rate Bin',
+            labels={'absolute_change': 'Mean Δ Consumption', 'growth_bin': 'Growth Rate Bin'}
+        )
         fig_heat = _standard_layout(fig_heat, xaxis_tickangle=45)
 
     figs = {
